@@ -57,15 +57,19 @@ class TestCommonDirective(Directive):
         if not test_path.is_absolute():
             root_path = pathlib.Path(self.app.config.tr_rootdir)
             test_path = root_path / test_path
-        self.test_file = str(test_path)
-        if not test_path.exists():
-            # raise TestReportFileInvalidException('Given test_file path invalid: {}'.format(self.test_file))
+            expanded_path = next(root_path.glob(test_path), None)
+        else:
+            expanded_path = next(glob(str(test_path)), None)
+
+        if expanded_path is None:
             self.log.warning(
                 "Given test_file path invalid: {} in {} (Line: {})".format(
-                    self.test_file, self.docname, self.lineno
+                    test_path, self.docname, self.lineno
                 )
             )
             return None
+
+        self.test_file = str(expanded_path)
 
         if self.test_file not in self.app.testreport_data.keys():
             parser = JUnitParser(self.test_file)
